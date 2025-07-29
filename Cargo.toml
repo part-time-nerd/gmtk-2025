@@ -3,15 +3,15 @@ name = "gmtk-2025"
 version = "0.1.0"
 edition = "2024"
 
-[target.'cfg(not(target_os = "windows"))'.dependencies]
-bevy = { version = "0.16", features = ["wayland"] }
+[target.'cfg(not(windows))'.dependencies]
+bevy = { version = "0.16", features = [ "wayland" ] }
 
 [target.x86_64-pc-windows-msvc.dependencies]
 # https://bevy-cheatbook.github.io/setup/cross/linux-windows.html#bevy-caveats
 # So we don't need `CARGO_FEATURE_PURE=1` when building for windows.
-blake3 = { version = "1.5", features = ["pure"] }
+blake3 = { version = "1.5", features = [ "pure" ] }
 
-[target.x86_64-pc-windows-msvc.dependencies.bevy]
+[target.'cfg(windows)'.dependencies.bevy]
 version = "0.16"
 # Disable the default features if there are any that you do not want
 default-features = false

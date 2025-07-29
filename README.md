@@ -15,3 +15,19 @@ You can also just run natively for development:
 ```sh
 cargo run
 ```
+
+## Compiling for web
+
+- <https://bevy-cheatbook.github.io/platforms/wasm.html>
+
+You will need to install the runner and configure `~/.cargo/config.toml`:
+```sh
+cargo install wasm-server-runner
+```
+
+Then you can run the app in the browser:
+```sh
+cargo run --target wasm32-unknown-unknown
+```
+
+TODO: consider using [trunk](https://github.com/trunk-rs/trunk) for deployment.
