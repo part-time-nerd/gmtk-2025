@@ -3,5 +3,65 @@ name = "gmtk-2025"
 version = "0.1.0"
 edition = "2024"
 
-[dependencies]
-bevy = "0.16.1"
+[target.'cfg(not(target_os = "windows"))'.dependencies]
+bevy = { version = "0.16", features = ["wayland"] }
+
+[target.x86_64-pc-windows-msvc.dependencies]
+# https://bevy-cheatbook.github.io/setup/cross/linux-windows.html#bevy-caveats
+# So we don't need `CARGO_FEATURE_PURE=1` when building for windows.
+blake3 = { version = "1.5", features = ["pure"] }
+
+[target.x86_64-pc-windows-msvc.dependencies.bevy]
+version = "0.16"
+# Disable the default features if there are any that you do not want
+default-features = false
+features = [
+    # https://docs.rs/bevy/0.16.1/bevy/#default-features
+    "android-game-activity",
+    "android_shared_stdcxx",
+    "animation",
+    "async_executor",
+    "bevy_animation",
+    "bevy_asset",
+    "bevy_audio",
+    "bevy_color",
+    "bevy_core_pipeline",
+    # https://gitlab.com/gilrs-project/gilrs/-/issues/167
+    # We get a crash when running cross-compiled binary through wine
+    # Disabling for now: so no gamepad support
+    # It looks like my keyboard is registering as a gamepad, which is probably why?
+    # On native `cargo run`:
+    #     2025-07-29T14:05:03.600588Z  INFO gilrs_core::platform::platform::gamepad: Gamepad /dev/input/event5 (Keychron Shopify x Keychron K3 Pro System Control) connected. 
+    # "bevy_gilrs",
+    "bevy_gizmos",
+    "bevy_gltf",
+    "bevy_input_focus",
+    "bevy_log",
+    "bevy_mesh_picking_backend",
+    "bevy_pbr",
+    "bevy_picking",
+    "bevy_render",
+    "bevy_scene",
+    "bevy_sprite",
+    "bevy_sprite_picking_backend",
+    "bevy_state",
+    "bevy_text",
+    "bevy_ui",
+    "bevy_ui_picking_backend",
+    "bevy_window",
+    "bevy_winit",
+    "custom_cursor",
+    "default_font",
+    "hdr",
+    "ktx2",
+    "multi_threaded",
+    "png",
+    "smaa_luts",
+    "std",
+    "sysinfo_plugin",
+    "tonemapping_luts",
+    "vorbis",
+    "webgl2",
+    "x11",
+    "zstd",
+]
