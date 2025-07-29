@@ -1,5 +1,10 @@
 # gmtk-2025
 
+run natively for development:
+```sh
+cargo run
+```
+
 ## Compiling for windows
 
 - Follow the [msvc setup instructions](https://bevy-cheatbook.github.io/setup/cross/linux-windows.html#first-time-setup-msvc) to get the toolchain configured.
@@ -11,10 +16,7 @@ cargo build --target=x86_64-pc-windows-msvc --release
 WGPU_BACKEND=vulkan wine target/x86_64-pc-windows-msvc/release/gmtk-2025.exe
 ```
 
-You can also just run natively for development:
-```sh
-cargo run
-```
+NOTE: There's some weirdness with keychron keyboard being recognized as a gamepad. If its connected when running the windows build through wine it will panic and crash. So unplug it and use a different keyboard. Also gamepads just don't work with it + wine -- it will crash if you have one plugged in. Not sure about bluetooth. Make sure to unplug it before testing. Should probably verify that it doesn't crash on an actual windows PC.
 
 ## Compiling for web
 
