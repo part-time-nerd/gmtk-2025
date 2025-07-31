@@ -6,17 +6,22 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_systems(Startup, setup)
-        .add_systems(Update, button_system)
-        .add_systems(Update, loop_counter_value_update_system)
-        .add_systems(Update, loop_counter_text_update_system)
+        .add_systems(
+            Update,
+            (button_system, loop_counter_text_update_system, change_loops_per_second, loop_counter_value_update_system),
+        )
+        .insert_resource(LoopsPerSecond(1.))
         .run();
 }
 
 #[derive(Component, Default)]
-struct LoopCounter(u64);
+struct LoopCounter(f64);
 
 #[derive(Component)]
 struct LoopCounterButton;
+
+#[derive(Resource)]
+struct LoopsPerSecond(f64);
 
 const NORMAL_BUTTON: Color = Color::srgb(0.15, 0.15, 0.15);
 const HOVERED_BUTTON: Color = Color::srgb(0.25, 0.25, 0.25);
@@ -78,20 +83,41 @@ fn counter(asset_server: &AssetServer) -> impl Bundle {
 }
 
 fn loop_counter_value_update_system(
+    time: Res<Time>,
+    loops_per_second: Res<LoopsPerSecond>,
     mut loop_counters: Query<&mut LoopCounter>,
     loop_counter_button_interactions: Query<&Interaction, With<LoopCounterButton>>,
 ) {
+    // Rather than doing this, we should probably make loop_counter.0 a floating point number
+    // Then increase it by the timedelta on each frame times the current value per time
+    // (We can truncate to an integer if we care about the display.)
     for mut loop_counter in &mut loop_counters {
         for interaction in loop_counter_button_interactions {
             if let Interaction::Pressed = interaction {
-                loop_counter.0 += 1
+                loop_counter.0 += time.delta_secs_f64() * loops_per_second.0;
             }
         }
     }
 }
+fn change_loops_per_second(mut loops_per_second: ResMut<LoopsPerSecond>, keys: Res<ButtonInput<KeyCode>>) {
+    if keys.just_pressed(KeyCode::ArrowUp) {
+        // Increase updates-per-second
+        let original = loops_per_second.0;
+        let target = original * 2.;
+        loops_per_second.0 = target;
+        println!("Loops per second changed from {original:.1} to {target:.1}");
+    } else if keys.just_pressed(KeyCode::ArrowDown) {
+        // Decrease updates-per-second
+        let original = loops_per_second.0;
+        let target = original / 2.;
+        loops_per_second.0 = target;
+        println!("Loops per second changed from {original:.1} to {target:.1}");
+    }
+}
+
 fn loop_counter_text_update_system(mut query: Query<(&mut TextSpan, &LoopCounter)>) {
-    for (mut span, LoopCounter(loops)) in &mut query {
-        **span = format!("{loops}");
+    for (mut span, &LoopCounter(loops)) in &mut query {
+        **span = format!("{}", loops as u64);
     }
 }
 
