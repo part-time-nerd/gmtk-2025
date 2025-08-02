@@ -5,6 +5,8 @@ edition = "2024"
 
 [dependencies]
 bevy = { version = "0.16", features = [ "wayland" ] }
+bevy_svg = "0.16.0-rc1"
+clap = { version = "4.5.42", features = ["derive"] }
 
 [target.x86_64-pc-windows-msvc.dependencies]
 # https://bevy-cheatbook.github.io/setup/cross/linux-windows.html#bevy-caveats
