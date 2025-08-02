@@ -1,35 +1,33 @@
+use bevy::color::palettes::css::LIGHT_STEEL_BLUE;
 use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
 use bevy::window::WindowResized;
 use bevy_svg::prelude::*;
 use clap::Parser;
 
-// A resource to store the previous window size
-// Assumes a single window
-#[derive(Resource, Default)]
-struct PreviousWindowSize {
-    width: f32,
-    height: f32,
-}
+const SPRITE_WINDOW_RATIO: f32 = 0.2;
 
 fn on_resize_system(
-    mut prev_size: ResMut<PreviousWindowSize>,
     mut sprites: Query<(&mut Transform, &Svg2d)>,
     mut resize_reader: EventReader<WindowResized>,
     svgs: Res<Assets<Svg>>,
 ) {
+    // Ho
     for e in resize_reader.read() {
-        // When resolution is being changed
-        println!("previous: {}, {}", prev_size.width, prev_size.height);
-        println!("window: {}, {}", e.width, e.height);
-        for (sprite_transform, svg2d) in &mut sprites {
-            println!("{}", sprite_transform.scale);
+        // Assuming a single window and that the sprites are square
+        // We scale to the smaller of width/height of the window
+        let window_scale = e.width.min(e.height);
+        let target_sprite_dimensions = window_scale * SPRITE_WINDOW_RATIO;
+        for (mut sprite_transform, svg2d) in &mut sprites {
             if let Some(svg) = svgs.get(&svg2d.0) {
-                println!("{}", svg.size)
+                // Assumes the svg is square. Otherwise this might be a weird scaling.
+                sprite_transform.scale = Vec3::from((target_sprite_dimensions / svg.size, 1.0));
+                sprite_transform.translation = Vec3::new(
+                    sprite_transform.translation.x.signum() * e.width / 2.,
+                    sprite_transform.translation.y.signum() * e.height / 2.,
+                    0.,
+                )
             }
         }
-        prev_size.width = e.width;
-        prev_size.height = e.height;
     }
 }
 
@@ -60,19 +58,45 @@ struct Args {
 
 fn setup(mut commands: Commands, assets: Res<AssetServer>, args: Res<Args>) {
     commands.spawn(Camera2d::default());
+    // Assumes the sprites are 512 x 512
+    let starting_scale = Vec3::new(
+        SPRITE_WINDOW_RATIO * INITIAL_WIDTH.min(INITIAL_HEIGHT) / 512.,
+        SPRITE_WINDOW_RATIO * INITIAL_WIDTH.min(INITIAL_HEIGHT) / 512.,
+        1.,
+    );
     commands.spawn((
         Svg2d(assets.load(&args.internet)),
-        Transform { translation: Vec3::new(-INITIAL_WIDTH / 2., INITIAL_HEIGHT / 2., 0.), ..Default::default() },
+        Transform {
+            translation: Vec3::new(-INITIAL_WIDTH / 2., INITIAL_HEIGHT / 2., 0.),
+            scale: starting_scale,
+            ..Default::default()
+        },
         Origin::TopLeft,
     ));
-    commands.spawn((Svg2d(assets.load(&args.wifi)), Origin::Center));
-    commands.spawn((Svg2d(assets.load(&args.computer)), Origin::Center));
+    commands.spawn((
+        Svg2d(assets.load(&args.wifi)),
+        Transform {
+            translation: Vec3::new(-INITIAL_WIDTH / 2., -INITIAL_HEIGHT / 2., 0.),
+            scale: starting_scale,
+            ..Default::default()
+        },
+        Origin::BottomLeft,
+    ));
+    commands.spawn((
+        Svg2d(assets.load(&args.computer)),
+        Transform {
+            translation: Vec3::new(INITIAL_WIDTH / 2., -INITIAL_HEIGHT / 2., 0.),
+            scale: starting_scale,
+            ..Default::default()
+        },
+        Origin::BottomRight,
+    ));
 }
 
 fn main() {
     App::new()
         .insert_resource(Args::parse())
-        .insert_resource(PreviousWindowSize::default())
+        .insert_resource(ClearColor(LIGHT_STEEL_BLUE.into()))
         .add_plugins((
             DefaultPlugins.set(WindowPlugin {
                 primary_window: Some(Window {
